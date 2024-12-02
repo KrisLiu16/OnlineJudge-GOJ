@@ -1,0 +1,41 @@
+# 二进制文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+
+# 测试二进制文件
+*.test
+
+# 输出文件
+*.out
+*.log
+meta.txt
+output.csv
+
+# IDE 相关
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 依赖目录
+vendor/
+
+# 环境配置
+.env
+.env.*
+!.env.example
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+tmp/
+temp/
+
+# 测试数据
+testdata/ 

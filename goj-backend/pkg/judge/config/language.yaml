@@ -1,0 +1,83 @@
+# 默认配置
+defaults: &defaults
+  env: &default_env
+    - "PATH=/usr/bin:/bin"
+  
+  compile: &default_compile
+    compiled_name: "Main"
+    cpu_limit: 30000000000     # 30s
+    memory_limit: 536870912    # 512MB
+    proc_limit: 128
+    
+  run: &default_run
+    stdout_max: 134217728      # 128MB
+    stderr_max: 10240          # 10KB
+    stack_limit: 134217728     # 128MB
+    proc_limit: 128
+    limit_amplify: 1
+
+# 语言配置映射
+languages:
+  c:  # C语言
+    name: "C17"
+    filename: "Main.c"
+    env: *default_env
+    compile:
+      <<: *default_compile
+      command: ["/usr/bin/gcc", "Main.c", "-std=c17", "-DONLINE_JUDGE", "-w", "-fmax-errors=1", "-lm", "-o", "Main"]
+    run:
+      <<: *default_run
+      command: ["./Main"]
+
+  cpp:  # C++20 -O2
+    name: "C++20 -O2"
+    filename: "Main.cpp"
+    env: *default_env
+    compile:
+      <<: *default_compile
+      command: ["/usr/bin/g++", "Main.cpp", "-std=c++20", "-O2", "-DONLINE_JUDGE", "-w", "-fmax-errors=1", "-lm", "-o", "Main"]
+    run:
+      <<: *default_run
+      command: ["./Main"]
+
+  java:  # Java8
+    name: "Java8"
+    filename: "Main.java"
+    env: *default_env
+    compile:
+      <<: *default_compile
+      command: ["/usr/bin/javac", "-encoding", "UTF-8", "Main.java"]
+      compiled_name: "Main.class"
+      cpu_limit: 60000000000  # 60s
+    run:
+      <<: *default_run
+      command: ["/usr/bin/java", "-Dfile.encoding=UTF-8", "Main"]
+      limit_amplify: 2
+
+  python:  # Python3
+    name: "Python3"
+    filename: "Main.py"
+    env: 
+      - "PATH=/usr/bin:/bin"
+      - "PYTHONIOENCODING=utf-8"
+    compile: null  # Python不需要编译
+    run:
+      <<: *default_run
+      command: ["/usr/bin/python3", "Main.py"]
+      limit_amplify: 2
+
+  go:  # Golang
+    name: "Golang"
+    filename: "Main.go"
+    env:
+      - "PATH=/usr/bin:/bin"
+      - "GOPATH=/w"
+      - "GOCACHE=/tmp"
+    compile:
+      <<: *default_compile
+      command: ["/usr/bin/go", "build", "Main.go"]
+      cpu_limit: 60000000000  # 60s
+    run:
+      <<: *default_run
+      command: ["./Main"]
+      limit_amplify: 2

@@ -1,0 +1,36 @@
+:root {
+  --primary-color: #42b883;
+  --primary-dark: #2f495e;
+  --text-color: #2c3e50;
+  --white: #ffffff;
+  --black: #1e1e1e;
+
+  /* 渐变背景色 */
+  --gradient-start: #42b883;
+  --gradient-end: #2f495e;
+
+  /* 按钮颜色 */
+  --button-primary: #42b883;
+  --button-text: #ffffff;
+
+  /* 管理员用户名渐变色 */
+  --admin-gradient-start: #ff4d4f;
+  --admin-gradient-end: #ff7875;
+}
+
+/* 移除默认的深色模式支持，使用固定的配色方案 */
+body {
+  color: var(--text-color);
+  background-color: var(--white);
+  margin: 0;
+  padding: 0;
+}
+
+/* 确保全屏高度 */
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
