@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getPublicWebsiteSettings } from '@/api/website'
+import { http } from '@/utils/http'
 import type { WebsiteSettings } from '@/api/website'
 
 const settings = ref<WebsiteSettings>({
@@ -69,10 +69,10 @@ const settings = ref<WebsiteSettings>({
 
 onMounted(async () => {
   try {
-    const { data } = await getPublicWebsiteSettings()
-    if (data) {
-      settings.value = data
-      localStorage.setItem('websiteSettings', JSON.stringify(data))
+    const response = await http.get('/website/settings')
+    if (response.code === 200) {
+      settings.value = response.data
+      localStorage.setItem('websiteSettings', JSON.stringify(response.data))
     }
   } catch (error) {
     console.error('获取网站设置失败:', error)
