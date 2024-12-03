@@ -40,7 +40,7 @@ then
 else
     echo "Docker Compose 未安装，正在安装 Docker Compose..."
 
-    # 下载 Docker Compose
+    # 使用代理下载 Docker Compose
     sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
     # 赋予执行权限

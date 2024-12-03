@@ -119,7 +119,7 @@ const resetFeatures = () => {
 const loadSettings = async () => {
   loading.value = true
   try {
-    const response = await fetch('/api/admin/settings', {
+    const response = await fetch('/api/admin/website/settings', {
       headers: {
         Authorization: `Bearer ${userStore.token}`
       }
@@ -146,7 +146,7 @@ const loadSettings = async () => {
 const saveSettings = async () => {
   saving.value = true
   try {
-    const response = await fetch('/api/admin/settings', {
+    const response = await fetch('/api/admin/website/settings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

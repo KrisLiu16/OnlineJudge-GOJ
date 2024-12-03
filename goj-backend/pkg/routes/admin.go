@@ -50,7 +50,7 @@ func SetupAdminRoutes(router *gin.Engine) {
 		admin.POST("/problems/export-all", controllers.ExportAllProblems)
 
 		// 网站设置
-		admin.GET("/settings", controllers.GetWebsiteSettings)
-		admin.POST("/settings", controllers.UpdateWebsiteSettings)
+		admin.GET("/website/settings", controllers.GetWebsiteSettings)
+		admin.POST("/website/settings", controllers.UpdateWebsiteSettings)
 	}
 }

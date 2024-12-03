@@ -2,7 +2,6 @@ FROM golang:1.22-alpine
 
 WORKDIR /app
 
-# 安装必要的系统依赖
 RUN apk add --no-cache gcc musl-dev
 
 # 复制 go.mod 和 go.sum

@@ -28,29 +28,35 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { http } from '@/utils/http'
+import type { WebsiteSettings } from '@/api/website'
 
-const settings = ref({
+const settings = ref<WebsiteSettings>({
   title: 'GO! Judge',
   subtitle: '快速、智能的在线评测系统',
   feature1: '<div class="feature-icon"><span class="icon-wrapper">📚</span></div><h3>丰富的题库</h3><p>包含各种难度的编程题目，从入门到进阶</p>',
   feature2: '<div class="feature-icon"><span class="icon-wrapper">🚀</span></div><h3>实时评测</h3><p>快速的代码执行和结果反馈</p>',
-  feature3: '<div class="feature-icon"><span class="icon-wrapper">👥</span></div><h3>社区讨论</h3><p>与其他同学交流学习心得</p>'
+  feature3: '<div class="feature-icon"><span class="icon-wrapper">👥</span></div><h3>社区讨论</h3><p>与其他同学交流学习心得</p>',
+  about: '',
+  email: '',
+  github: '',
+  icp: '',
+  icpLink: ''
 })
 
 onMounted(async () => {
   try {
+    const response = await http.get('/website/settings')
+    if (response.code === 200) {
+      settings.value = response.data
+      localStorage.setItem('websiteSettings', JSON.stringify(response.data))
+    }
+  } catch (error) {
+    console.error('获取网站设置失败:', error)
     const savedSettings = localStorage.getItem('websiteSettings')
     if (savedSettings) {
       settings.value = JSON.parse(savedSettings)
     }
-
-    const response = await fetch('/api/website/settings')
-    const data = await response.json()
-    if (data.code === 200) {
-      settings.value = data.data
-    }
-  } catch (error) {
-    console.error('Failed to load website settings:', error)
   }
 })
 </script>

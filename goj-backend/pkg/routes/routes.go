@@ -65,7 +65,6 @@ func SetupRoutes(r *gin.Engine) {
 		public.POST("/auth/register", auth.Register)
 		public.GET("/rank", rank.GetRankList)
 		public.GET("/judge/status", controllers.GetJudgeStatus)
-		public.GET("/settings", controllers.GetPublicWebsiteSettings)
 	}
 
 	// 需要认证的路由
@@ -129,6 +128,9 @@ func SetupRoutes(r *gin.Engine) {
 			handler.HandleWebSocket(c.Writer, c.Request, uid)
 		})
 	}
+
+	// 公开的网站设置路由
+	r.GET("/api/website/settings", controllers.GetPublicWebsiteSettings)
 
 	// 移除 /help 路由的处理
 	r.NoRoute(func(c *gin.Context) {

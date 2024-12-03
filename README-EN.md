@@ -1,7 +1,7 @@
 # GO! Judge
 
 [![Vue](https://img.shields.io/badge/vue-3.3.4-brightgreen.svg?style=flat-square)](https://vuejs.org/)
-[![Go](https://img.shields.io/badge/go-1.23-blue.svg?style=flat-square)](https://golang.org/)
+[![Go](https://img.shields.io/badge/go-1.22-blue.svg?style=flat-square)](https://golang.org/)
 [![Gin](https://img.shields.io/badge/gin-1.9.1-blue.svg?style=flat-square)](https://gin-gonic.com/)
 
 > #### A modern online judging system based on Go and Vue3

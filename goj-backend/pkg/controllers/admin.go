@@ -612,6 +612,7 @@ func GetWebsiteSettings(c *gin.Context) {
 			Email:    "support@example.com",
 			Github:   "https://github.com/yourusername",
 			ICPLink:  "https://beian.miit.gov.cn/",
+			ICP:      "",
 			Feature1: `<div class="feature-icon"><span class="icon-wrapper">📚</span></div><h3>丰富的题库</h3><p>包含各种难度的编程题目，从入门到进阶</p>`,
 			Feature2: `<div class="feature-icon"><span class="icon-wrapper">🚀</span></div><h3>实时评测</h3><p>快速的代码执行和结果反馈</p>`,
 			Feature3: `<div class="feature-icon"><span class="icon-wrapper">👥</span></div><h3>社区讨论</h3><p>与其他同学交流学习心得</p>`,

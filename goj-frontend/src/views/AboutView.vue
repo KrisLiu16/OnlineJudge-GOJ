@@ -51,28 +51,31 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { getPublicWebsiteSettings } from '@/api/website'
+import type { WebsiteSettings } from '@/api/website'
 
-const settings = ref({
+const settings = ref<WebsiteSettings>({
   title: 'GO! Judge',
+  subtitle: '快速、智能的在线评测系统',
   about: 'GOJ是一个高性能在线评测的平台，致力于提供快速、稳定的评测服务。',
   email: 'support@example.com',
-  github: 'https://github.com/yourusername'
+  github: 'https://github.com/yourusername',
+  icp: '',
+  icpLink: '',
+  feature1: '',
+  feature2: '',
+  feature3: ''
 })
 
 onMounted(async () => {
   try {
-    const savedSettings = localStorage.getItem('websiteSettings')
-    if (savedSettings) {
-      settings.value = JSON.parse(savedSettings)
-    }
-
-    const response = await fetch('/api/website/settings')
-    const data = await response.json()
-    if (data.code === 200) {
-      settings.value = data.data
+    const { data } = await getPublicWebsiteSettings()
+    if (data) {
+      settings.value = data
+      localStorage.setItem('websiteSettings', JSON.stringify(data))
     }
   } catch (error) {
-    console.error('Failed to load website settings:', error)
+    console.error('获取网站设置失败:', error)
   }
 })
 </script>
