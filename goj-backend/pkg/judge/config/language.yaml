@@ -35,7 +35,7 @@ languages:
     env: *default_env
     compile:
       <<: *default_compile
-      command: ["/usr/bin/g++", "Main.cpp", "-std=c++20", "-O2", "-DONLINE_JUDGE", "-w", "-fmax-errors=1", "-lm", "-o", "Main"]
+      command: ["/usr/bin/g++", "Main.cpp", "-std=c++20", "-O2", "-DONLINE_JUDGE", "-w", "-fmax-errors=1", "-lm", "-I/usr/local/include", "-o", "Main"]
     run:
       <<: *default_run
       command: ["./Main"]

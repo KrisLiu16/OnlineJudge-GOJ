@@ -38,4 +38,4 @@ tmp/
 temp/
 
 # 测试数据
-testdata/ 
+data/*

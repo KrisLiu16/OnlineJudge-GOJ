@@ -114,6 +114,7 @@ func CreateSubmission(c *gin.Context) {
 		UserID:      userID,
 		TimeLimit:   problem.TimeLimit,
 		MemoryLimit: problem.MemoryLimit,
+		UseSPJ:      problem.UseSPJ,
 	}
 
 	// 打印任务信息

@@ -16,8 +16,8 @@ const (
 
 // SendToJudgeQueue 发送任务到评测队列
 func SendToJudgeQueue(task *types.JudgeTask) error {
-	log.Printf("\033[31m[Queue] Sending task to queue - ID: %d, Time: %d ms, Memory: %d MB\033[0m",
-		task.ID, task.TimeLimit, task.MemoryLimit)
+	log.Printf("\033[31m[Queue] Sending task to queue - ID: %d, Time: %d ms, Memory: %d MB, UseSPJ: %v\033[0m",
+		task.ID, task.TimeLimit, task.MemoryLimit, task.UseSPJ)
 
 	jsonData, err := json.Marshal(task)
 	if err != nil {

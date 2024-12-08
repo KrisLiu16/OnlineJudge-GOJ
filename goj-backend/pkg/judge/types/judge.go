@@ -20,7 +20,7 @@ const (
 	StatusPresentationError   = "Presentation Error"
 )
 
-// JudgeConfig 评测配置
+// JudgeConfig 评测配置 可能 没用到 但是不敢删
 type JudgeConfig struct {
 	TimeLimit   int  `json:"timeLimit"`   // 时间限制(ms)
 	MemoryLimit int  `json:"memoryLimit"` // 内存限制(MB)
@@ -60,6 +60,7 @@ type JudgeTask struct {
 	TimeLimit   int64       // 时间限制(ms)
 	MemoryLimit int64       // 内存限制(MB)
 	Config      JudgeConfig // 评测配置
+	UseSPJ      bool        // 是否使用特殊评测
 }
 
 // TestCase 测试用例

@@ -63,10 +63,15 @@ services:
     restart: always
     environment:
       - DB_HOST=goj-mysql
+      - DB_USER=goj
+      - DB_PASSWORD=goj123456
+      - DB_NAME=goj
       - REDIS_ADDR=goj-redis:6379
       - JUDGE_ADDR=http://goj-judge:5050
     ports:
       - "3000:3000"
+    volumes:
+      - ../goj-backend/data:/app/data
     depends_on:
       - goj-mysql
       - goj-redis
@@ -93,3 +98,4 @@ networks:
 volumes:
   mysql_data:
   redis_data:
+  problem_data:

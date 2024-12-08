@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"goj/pkg/config"
 	"goj/pkg/judge/types"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -44,8 +45,24 @@ type LanguageStrategy struct {
 	config    *config.LangConfig
 }
 
-// Judge 实现评测接口
+// Judge ���现评测接口
 func (s *LanguageStrategy) Judge(task *types.JudgeTask) (*types.JudgeResult, error) {
+	// 如果需要特判,提前编译SPJ
+	var spjCompileResult *struct{ fileId string }
+	var err error
+	if task.UseSPJ {
+		log.Printf("[Judge] Compiling special judge for problem %s", task.ProblemID)
+		spjCompileResult, err = s.compileSpj(task.ProblemID)
+		if err != nil {
+			return &types.JudgeResult{
+				ID:        task.ID,
+				UserID:    task.UserID, 
+				ProblemID: task.ProblemID,
+				Status:    types.StatusSystemError,
+				ErrorInfo: fmt.Sprintf("[Special Judge Compile Error] %v", err),
+			}, nil
+		}
+	}
 	// 如果需要编译
 	if s.config.Compile != nil {
 		// 编译代码
@@ -59,12 +76,15 @@ func (s *LanguageStrategy) Judge(task *types.JudgeTask) (*types.JudgeResult, err
 				ErrorInfo: err.Error(),
 			}, nil
 		}
+		
+	
+		
 		// 运行测试
-		return s.runTests(task, compileResult.fileId)
+		return s.runTests(task, compileResult.fileId, spjCompileResult)
 	}
 
 	// 解释型语言直接运行测试
-	return s.runTests(task, "")
+	return s.runTests(task, "", spjCompileResult)
 }
 
 // compile 编译代码
@@ -163,7 +183,7 @@ func getTestCases(problemID string) ([]types.TestCase, error) {
 }
 
 // runTests 运行测试用例
-func (s *LanguageStrategy) runTests(task *types.JudgeTask, execFileId string) (*types.JudgeResult, error) {
+func (s *LanguageStrategy) runTests(task *types.JudgeTask, execFileId string, spjCompileResult *struct{ fileId string }) (*types.JudgeResult, error) {
 	solution := &types.JudgeResult{
 		ID:         task.ID,
 		UserID:     task.UserID,
@@ -216,6 +236,11 @@ func (s *LanguageStrategy) runTests(task *types.JudgeTask, execFileId string) (*
 			CopyOut:     []string{fmt.Sprintf("stdout%d", i), fmt.Sprintf("stderr%d", i)},
 		}
 
+		// 如果使用 SPJ，则需要缓存用户输出
+		if task.UseSPJ {
+			cmd.CopyOutCached = []string{fmt.Sprintf("stdout%d", i)}
+		}
+
 		// 根据是否有编译文件设置不同的输入
 		if execFileId != "" {
 			cmd.CopyIn[s.config.Compile.CompiledName] = map[string]string{
@@ -239,19 +264,41 @@ func (s *LanguageStrategy) runTests(task *types.JudgeTask, execFileId string) (*
 		var errorInfo string
 
 		if result.Status == "Accepted" {
-			if task.Config.UseSPJ {
+			log.Printf("[Judge] Program execution status: Accepted")
+			log.Printf("[Judge] UseSPJ flag: %v", task.UseSPJ)
+
+			if task.UseSPJ {
+				// 检查用户输出是否存在
+				userOutputKey := fmt.Sprintf("stdout%d", i)
+				userOutputId, ok := result.FileIds[userOutputKey]
+				if !ok {
+					log.Printf("[Judge] User output not found in FileIds: %+v", result.FileIds)
+					return nil, fmt.Errorf("user output not found")
+				}
+				log.Printf("[Judge] User output fileId: %s", userOutputId)
+
+				log.Printf("[Judge] Using special judge for problem %s", task.ProblemID)
 				// 使用特判程序
 				status, errorInfo = s.specialJudge(
-					task.ProblemID,
-					fmt.Sprintf("/testdata/%s/test/%s", task.ProblemID, tc.Name+".in"),
-					fmt.Sprintf("/testdata/%s/test/%s", task.ProblemID, tc.Name+".out"),
-					result.FileIds[fmt.Sprintf("stdout%d", i)],
-				)
+						task.ProblemID,
+						filepath.Join("data", "problems", task.ProblemID, "data", tc.Name+".in"),
+						filepath.Join("data", "problems", task.ProblemID, "data", tc.Name+".out"),
+						userOutputId,
+						spjCompileResult,
+					)
+				log.Printf("[Judge] Special judge result: status=%s, error=%s", status, errorInfo)
 			} else {
 				// 普通文本比对
-				status, errorInfo = s.diffJudge(tc.Output, result.Files[fmt.Sprintf("stdout%d", i)])
+				userOutput, ok := result.Files[fmt.Sprintf("stdout%d", i)]
+				if !ok {
+					log.Printf("[Judge] User output not found in Files: %+v", result.Files)
+					return nil, fmt.Errorf("user output not found")
+				}
+				log.Printf("[Judge] Using normal text comparison")
+				status, errorInfo = s.diffJudge(tc.Output, userOutput)
 			}
 		} else {
+			log.Printf("[Judge] Program execution failed with status: %s", result.Status)
 			status = mapSandboxStatus(result.Status)
 			errorInfo = fmt.Sprintf("[%s]\n%s\n", result.Status, result.Files[fmt.Sprintf("stderr%d", i)])
 		}
@@ -303,34 +350,29 @@ func (s *LanguageStrategy) runTests(task *types.JudgeTask, execFileId string) (*
 }
 
 // specialJudge 特判程序评测
-func (s *LanguageStrategy) specialJudge(problemID, stdInPath, stdOutPath, userOutFileId string) (string, string) {
-	// 获取特判程序配置
-	spjConfig, ok := config.Language.Languages["cpp"] // 特判程序都用C++
-	if !ok {
-		return types.StatusSystemError, "SPJ configuration not found"
-	}
+func (s *LanguageStrategy) specialJudge(problemID, stdInPath, stdOutPath, userOutFileId string, spjCompileResult *struct{ fileId string }) (string, string) {
+	log.Printf("[Judge] SPJ paths: input=%s, output=%s", stdInPath, stdOutPath)
+	log.Printf("[Judge] SPJ compile result: %+v", spjCompileResult)
 
-	// 读取特判源码
-	spjCode, err := os.ReadFile(fmt.Sprintf("/testdata/%s/spj.cpp", problemID))
+	// 读取输入和答案文件内容
+	stdIn, err := os.ReadFile(stdInPath)
 	if err != nil {
-		return types.StatusSystemError, fmt.Sprintf("Failed to read SPJ code: %v", err)
+		log.Printf("[Judge] Failed to read input file: %v", err)
+		return types.StatusSystemError, fmt.Sprintf("Failed to read input file: %v", err)
 	}
 
-	// 编译特判程序
-	spjCompileResult, err := s.compile(&types.JudgeTask{
-		Code:     string(spjCode),
-		Language: "cpp",
-	})
+	stdOut, err := os.ReadFile(stdOutPath)
 	if err != nil {
-		return types.StatusSystemError, fmt.Sprintf("Failed to compile SPJ: %v", err)
+		log.Printf("[Judge] Failed to read answer file: %v", err)
+		return types.StatusSystemError, fmt.Sprintf("Failed to read answer file: %v", err)
 	}
 
-	// 运行特判程序
+	// 构造运行请求 - 硬编码 SPJ 运行配置
 	req := types.SandboxRequest{
 		Cmd: []types.SandboxCmd{
 			{
-				Args: append(spjConfig.Run.Command, "std.in", "std.out", "user.out"),
-				Env:  spjConfig.Env,
+				Args: []string{"./spj", "std.in", "std.out", "user.out"},
+				Env:  []string{"PATH=/usr/bin:/bin"},
 				Files: []interface{}{
 					map[string]string{"content": ""},
 					map[string]interface{}{
@@ -342,15 +384,19 @@ func (s *LanguageStrategy) specialJudge(problemID, stdInPath, stdOutPath, userOu
 						"max":  10240,
 					},
 				},
-				CpuLimit:    60000000000, // 60s
-				MemoryLimit: 2048 << 20,  // 2048MB
-				ProcLimit:   spjConfig.Run.ProcLimit,
+				CpuLimit:    10000000000,  // 10s
+				MemoryLimit: 512 << 20,    // 512MB
+				ProcLimit:   50,
 				CopyIn: map[string]interface{}{
-					spjConfig.Compile.CompiledName: map[string]string{
-						"fileId": spjCompileResult.fileId, // 使用编译后的特判程序
+					"spj": map[string]string{
+						"fileId": spjCompileResult.fileId,
 					},
-					"std.in":  map[string]string{"src": stdInPath},
-					"std.out": map[string]string{"src": stdOutPath},
+					"std.in": map[string]string{
+						"content": string(stdIn),
+					},
+					"std.out": map[string]string{
+						"content": string(stdOut),
+					},
 					"user.out": map[string]string{
 						"fileId": userOutFileId,
 					},
@@ -360,26 +406,61 @@ func (s *LanguageStrategy) specialJudge(problemID, stdInPath, stdOutPath, userOu
 		},
 	}
 
+	log.Printf("[Judge] SPJ compile command: %v", req.Cmd[0].Args)
+	log.Printf("[Judge] SPJ files: %+v", req.Cmd[0].CopyIn)
+
 	// 发送请求
 	resp, err := sendRequest(s.judgeAddr, req)
 	if err != nil {
 		return types.StatusSystemError, fmt.Sprintf("Failed to run SPJ: %v", err)
 	}
 
-	// 检查特判结果
-	if resp[0].ExitStatus == 0 {
-		return types.StatusAccepted, ""
+	log.Printf("[Judge] SPJ execution response: %+v", resp[0])
+
+	// 检查特判程序是否正常运行
+	if resp[0].Status != "Accepted" {
+		return types.StatusSystemError, fmt.Sprintf(
+			"Special judge failed to run: status=%s, stdout=%s, stderr=%s",
+			resp[0].Status,
+			resp[0].Files["stdout"],
+			resp[0].Files["stderr"],
+		)
 	}
 
-	return types.StatusWrongAnswer, fmt.Sprintf("[Special Judge]\n%s\n%s",
-		resp[0].Files["stdout"],
-		resp[0].Files["stderr"],
-	)
+	log.Printf("[Judge] SPJ exit status: %d", resp[0].ExitStatus)
+
+	// 检查特判结果
+	// exitStatus: 
+	// 0 - AC (答案正确)
+	// 1 - WA (答案错误)
+	// 2 - PE (格式错误)
+	// 其他 - 系统错误
+	switch resp[0].ExitStatus {
+	case 0:
+		return types.StatusAccepted, ""
+	case 1:
+		return types.StatusWrongAnswer, fmt.Sprintf("[Special Judge]\nstdout:\n%s\nstderr:\n%s",
+			resp[0].Files["stdout"],
+			resp[0].Files["stderr"],
+		)
+	case 2:
+		return types.StatusPresentationError, fmt.Sprintf("[Special Judge]\nstdout:\n%s\nstderr:\n%s",
+			resp[0].Files["stdout"],
+			resp[0].Files["stderr"],
+		)
+	default:
+		return types.StatusSystemError, fmt.Sprintf(
+			"[Special Judge Error]\nExit code: %d\nstdout:\n%s\nstderr:\n%s",
+			resp[0].ExitStatus,
+			resp[0].Files["stdout"],
+			resp[0].Files["stderr"],
+		)
+	}
 }
 
 // diffJudge 文本对比
 func (s *LanguageStrategy) diffJudge(stdOut, userOut string) (string, string) {
-	// 按行分割
+	// 按分割
 	stdLines := strings.Split(strings.TrimSpace(stdOut), "\n")
 	userLines := strings.Split(strings.TrimSpace(userOut), "\n")
 
@@ -442,4 +523,64 @@ func mapSandboxStatus(status string) string {
 	default:
 		return types.StatusSystemError
 	}
+}
+
+// compileSpj 函数用于编译特判程序
+func (s *LanguageStrategy) compileSpj(problemID string) (*struct{ fileId string }, error) {
+	// 读取特判源码
+	spjCode, err := os.ReadFile(filepath.Join("data", "problems", problemID, "spj.cpp"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read SPJ code: %v", err)
+	}
+
+	// 构造编译请求 - 硬编码 SPJ 编译配置
+	req := types.SandboxRequest{
+		Cmd: []types.SandboxCmd{
+			{
+				Args: []string{
+					"/usr/bin/g++",
+					"spj.cpp",
+					"-o", "spj",
+					"-O2",
+					"-std=c++17",
+					"-I/usr/local/include",
+				},
+				Env: []string{"PATH=/usr/bin:/bin"},
+				Files: []interface{}{
+					map[string]string{"content": ""},
+					map[string]interface{}{
+						"name": "stdout",
+						"max":  10240,
+					},
+					map[string]interface{}{
+						"name": "stderr",
+						"max":  10240,
+					},
+				},
+				CpuLimit:    30000000000,  // 30s
+				MemoryLimit: 512 << 20,    // 512MB
+				ProcLimit:   50,
+				CopyIn: map[string]interface{}{
+					"spj.cpp": map[string]string{
+						"content": string(spjCode),
+					},
+				},
+				CopyOut:       []string{"stdout", "stderr"},
+				CopyOutCached: []string{"spj"},
+			},
+		},
+	}
+
+	resp, err := sendRequest(s.judgeAddr, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp[0].Status != "Accepted" {
+		return nil, fmt.Errorf("compile error: %s", resp[0].Files["stderr"])
+	}
+
+	return &struct{ fileId string }{
+		fileId: resp[0].FileIds["spj"],
+	}, nil
 }
