@@ -45,7 +45,7 @@ type LanguageStrategy struct {
 	config    *config.LangConfig
 }
 
-// Judge ���现评测接口
+// Judge 实现评测接口
 func (s *LanguageStrategy) Judge(task *types.JudgeTask) (*types.JudgeResult, error) {
 	// 如果需要特判,提前编译SPJ
 	var spjCompileResult *struct{ fileId string }
@@ -415,46 +415,13 @@ func (s *LanguageStrategy) specialJudge(problemID, stdInPath, stdOutPath, userOu
 		return types.StatusSystemError, fmt.Sprintf("Failed to run SPJ: %v", err)
 	}
 
-	log.Printf("[Judge] SPJ execution response: %+v", resp[0])
-
-	// 检查特判程序是否正常运行
-	if resp[0].Status != "Accepted" {
-		return types.StatusSystemError, fmt.Sprintf(
-			"Special judge failed to run: status=%s, stdout=%s, stderr=%s",
-			resp[0].Status,
-			resp[0].Files["stdout"],
-			resp[0].Files["stderr"],
-		)
-	}
-
-	log.Printf("[Judge] SPJ exit status: %d", resp[0].ExitStatus)
 
 	// 检查特判结果
-	// exitStatus: 
-	// 0 - AC (答案正确)
-	// 1 - WA (答案错误)
-	// 2 - PE (格式错误)
-	// 其他 - 系统错误
 	switch resp[0].ExitStatus {
 	case 0:
 		return types.StatusAccepted, ""
-	case 1:
-		return types.StatusWrongAnswer, fmt.Sprintf("[Special Judge]\nstdout:\n%s\nstderr:\n%s",
-			resp[0].Files["stdout"],
-			resp[0].Files["stderr"],
-		)
-	case 2:
-		return types.StatusPresentationError, fmt.Sprintf("[Special Judge]\nstdout:\n%s\nstderr:\n%s",
-			resp[0].Files["stdout"],
-			resp[0].Files["stderr"],
-		)
 	default:
-		return types.StatusSystemError, fmt.Sprintf(
-			"[Special Judge Error]\nExit code: %d\nstdout:\n%s\nstderr:\n%s",
-			resp[0].ExitStatus,
-			resp[0].Files["stdout"],
-			resp[0].Files["stderr"],
-		)
+		return types.StatusWrongAnswer, ""
 	}
 }
 
@@ -466,7 +433,7 @@ func (s *LanguageStrategy) diffJudge(stdOut, userOut string) (string, string) {
 
 	// 检查行数
 	if len(stdLines) != len(userLines) {
-		return types.StatusWrongAnswer, "Inconsistent number of rows"
+		return types.StatusWrongAnswer, ""
 	}
 
 	// 逐行检查
@@ -476,15 +443,10 @@ func (s *LanguageStrategy) diffJudge(stdOut, userOut string) (string, string) {
 
 		if userLine != answerLine {
 			if strings.TrimSpace(userLine) != strings.TrimSpace(answerLine) {
-				msg := fmt.Sprintf("Wrong answer on line %d\nYours:\n%s\nCorrect:\n%s\n",
-					i+1, truncateString(userLine, 60), truncateString(answerLine, 60))
-				return types.StatusWrongAnswer, msg
+				return types.StatusWrongAnswer, ""
 			}
 			// 内容相同但格式不同（空白字符不同）
-			return types.StatusPresentationError, fmt.Sprintf(
-				"Presentation error on line %d\nYours: [%s]\nCorrect: [%s]",
-				i+1, userLine, answerLine,
-			)
+			return types.StatusPresentationError, ""
 		}
 	}
 

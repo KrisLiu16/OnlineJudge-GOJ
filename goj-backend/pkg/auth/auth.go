@@ -21,7 +21,7 @@ import (
 // POST /api/auth/login
 // 请求:
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
+	Account  string `json:"account" binding:"required"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
@@ -351,20 +351,26 @@ func Login(c *gin.Context) {
 	}
 
 	var user models.User
-	if result := config.DB.Where("email = ?", req.Email).First(&user); result.Error != nil {
-		c.JSON(http.StatusUnauthorized, Response{
-			Code:    401,
-			Message: "用户名或密码错误",
-			Data:    nil,
-		})
-		return
+	// 先尝试用邮箱查找
+	result := config.DB.Where("email = ?", req.Account).First(&user)
+	if result.Error != nil {
+		// 如果邮箱找不到，尝试用用户名查找
+		result = config.DB.Where("username = ?", req.Account).First(&user)
+		if result.Error != nil {
+			c.JSON(http.StatusUnauthorized, Response{
+				Code:    401,
+				Message: "用户名/邮箱或密码错误",
+				Data:    nil,
+			})
+			return
+		}
 	}
 
 	// 验证密码
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, Response{
 			Code:    401,
-			Message: "用户名或密码错误",
+			Message: "用户名/邮箱或密码错误",
 			Data:    nil,
 		})
 		return

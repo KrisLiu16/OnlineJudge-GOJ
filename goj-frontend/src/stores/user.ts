@@ -33,6 +33,32 @@ export const useUserStore = defineStore('user', {
       this.token = token
       localStorage.setItem('token', token)
     },
+    async login(account: string, password: string) {
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ account, password }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.message || '登录失败')
+        }
+
+        const data = await response.json()
+        if (data.code === 200) {
+          this.setToken(data.data.token)
+          this.setUser(data.data.user)
+        } else {
+          throw new Error(data.message || '登录失败')
+        }
+      } catch (error) {
+        throw error
+      }
+    },
     logout() {
       if (this.ws) {
         this.ws.close()
@@ -43,7 +69,6 @@ export const useUserStore = defineStore('user', {
       localStorage.removeItem('token')
     },
     clearToken() {
-      // console.log('[UserStore] 清除token')
       this.token = ''
       localStorage.removeItem('token')
     },

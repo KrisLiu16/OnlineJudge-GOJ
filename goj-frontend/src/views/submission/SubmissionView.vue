@@ -1028,4 +1028,10 @@ a:hover {
   color: var(--text-secondary);
   opacity: 0.7;
 }
+
+/* Nonzero Exit Status - 非零退出 */
+.status-badge.nonzero-exit-status {
+  background: linear-gradient(135deg, #cb356b, #bd3f32);
+  box-shadow: 0 2px 8px rgba(203, 53, 107, 0.3);
+}
 </style>

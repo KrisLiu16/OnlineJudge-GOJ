@@ -36,7 +36,7 @@
                 {{ submission?.username }}
               </router-link>
             </div>
-            <div class="status-badge" :class="submission?.status.toLowerCase()">
+            <div class="status-badge" :class="getStatusClass(submission?.status)">
               {{ submission?.status }}
             </div>
           </div>
@@ -78,7 +78,7 @@
           <div class="testcase-header" @click="toggleTestCase(index)">
             <div class="testcase-info">
               <span class="testcase-number">测试点 #{{ index + 1 }}</span>
-              <span class="status-badge" :class="status.toLowerCase()">
+              <span class="status-badge" :class="getStatusClass(status)">
                 {{ status }}
               </span>
               <div class="resource-badges" v-if="submission.testCaseResults?.[index]">
@@ -530,37 +530,37 @@
 }
 
 /* Wrong Answer - 答案错误 */
-.status-badge.wrong.answer {
+.status-badge.wrong-answer {
   background: linear-gradient(135deg, #ff416c, #ff4b2b);
   box-shadow: 0 2px 8px rgba(255, 65, 108, 0.3);
 }
 
 /* Runtime Error - 运行时错误 */
-.status-badge.runtime.error {
+.status-badge.runtime-error {
   background: linear-gradient(135deg, #f7b733, #fc4a1a);
   box-shadow: 0 2px 8px rgba(247, 183, 51, 0.3);
 }
 
 /* Time Limit Exceeded - 超时 */
-.status-badge.time.limit.exceeded {
+.status-badge.time-limit-exceeded {
   background: linear-gradient(135deg, #834d9b, #d04ed6);
   box-shadow: 0 2px 8px rgba(131, 77, 155, 0.3);
 }
 
 /* Memory Limit Exceeded - 内存超限 */
-.status-badge.memory.limit.exceeded {
+.status-badge.memory-limit-exceeded {
   background: linear-gradient(135deg, #4568dc, #b06ab3);
   box-shadow: 0 2px 8px rgba(69, 104, 220, 0.3);
 }
 
 /* Compilation Error - 编译错误 */
-.status-badge.compile.error {
+.status-badge.compile-error {
   background: linear-gradient(135deg, #373b44, #4286f4);
   box-shadow: 0 2px 8px rgba(55, 59, 68, 0.3);
 }
 
 /* System Error - 系统错误 */
-.status-badge.system.error {
+.status-badge.system-error {
   background: linear-gradient(135deg, #cb356b, #bd3f32);
   box-shadow: 0 2px 8px rgba(203, 53, 107, 0.3);
 }
@@ -1211,5 +1211,10 @@ onUnmounted(() => {
 // 添加切换测试点展开状态的函数
 const toggleTestCase = (index: number) => {
   expandedTests.value[index] = !expandedTests.value[index]
+}
+
+const getStatusClass = (status: string) => {
+  // 将状态转换为小写并替换空格为连字符
+  return status.toLowerCase().replace(/\s+/g, '-')
 }
 </script>

@@ -5,7 +5,7 @@ import { useUserStore } from '@/stores/modules/user'
 import { useRouter } from 'vue-router'
 import { AxiosError } from 'axios'
 
-// 添加响应数据的接口定义
+// 修改响应数据的接口定义
 interface ApiResponse {
   message: string
 }
@@ -13,13 +13,13 @@ interface ApiResponse {
 const userStore = useUserStore()
 const router = useRouter()
 
-const email = ref('')
+const account = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const errorMessage = ref('')
 const loading = ref(false)
 const isVerified = ref(false)
-const emailFocus = ref(false)
+const accountFocus = ref(false)
 const passwordFocus = ref(false)
 const showPassword = ref(false)
 
@@ -30,38 +30,36 @@ const handleVerifySuccess = () => {
 const handleLogin = async () => {
   console.log('=== SignInView.handleLogin Start ===')
   console.log('Form data:', {
-    email: email.value,
+    account: account.value,
     password: '***',
     isVerified: isVerified.value,
   })
 
   if (!isVerified.value) {
-    // console.log('Verification not completed')
     errorMessage.value = '请完成人机验证'
     return
   }
 
-  if (!email.value || !password.value) {
-    // console.log('Missing required fields')
+  if (!account.value || !password.value) {
     errorMessage.value = '请填写所有必填项'
+    return
+  }
+
+  // 添加基本的账户格式验证
+  if (account.value.length < 2) {
+    errorMessage.value = '账户长度至少为2个字符'
     return
   }
 
   try {
     loading.value = true
-    // console.log('Calling userStore.login...')
-    await userStore.login(email.value, password.value)
-    // console.log('Login successful')
+    await userStore.login(account.value, password.value)
     router.push('/')
   } catch (error) {
-    // console.error('=== Login Handler Error ===')
     const apiError = error as AxiosError<ApiResponse>
-    // console.error('Error:', apiError)
-    // console.error('Response:', apiError.response)
     errorMessage.value = apiError.response?.data?.message || '登录失败，请重试'
   } finally {
     loading.value = false
-    // console.log('=== SignInView.handleLogin End ===')
   }
 }
 </script>
@@ -81,19 +79,19 @@ const handleLogin = async () => {
         </div>
 
         <div class="form-group">
-          <label for="email">
-            <i class="fas fa-envelope"></i>
-            邮箱
+          <label for="account">
+            <i class="fas fa-user"></i>
+            账户
           </label>
           <input
-            type="email"
-            id="email"
-            v-model="email"
-            placeholder="请输入邮箱"
+            type="text"
+            id="account"
+            v-model="account"
+            placeholder="请输入用户名或邮箱"
             required
-            :class="{ 'input-focus': emailFocus }"
-            @focus="emailFocus = true"
-            @blur="emailFocus = false"
+            :class="{ 'input-focus': accountFocus }"
+            @focus="accountFocus = true"
+            @blur="accountFocus = false"
           />
         </div>
 

@@ -13,7 +13,7 @@ export interface User {
 }
 
 export interface LoginData {
-  email: string
+  account: string
   password: string
 }
 

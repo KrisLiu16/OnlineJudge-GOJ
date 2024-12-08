@@ -67,7 +67,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="submission in submissions" :key="submission.ID">
+              <tr v-for="submission in paginatedSubmissions" :key="submission.ID">
                 <td>
                   <span :class="['status-badge', getStatusClass(submission.Status)]">
                     {{ submission.Status }}
@@ -329,19 +329,7 @@ const fetchSubmissions = async () => {
 
     const data = await response.json()
     if (data.code === 200) {
-      submissions.value = data.data.submissions.map((submission: Partial<Submission>) => ({
-        ...submission,
-        ID: submission.ID,
-        ProblemID: submission.ProblemID,
-        Language: submission.Language,
-        Status: submission.Status,
-        TimeUsed: submission.TimeUsed,
-        MemoryUsed: submission.MemoryUsed,
-        SubmitTime: submission.SubmitTime,
-        problemTitle: submission.problemTitle,
-        username: submission.username,
-        userAvatar: submission.userAvatar,
-      }))
+      submissions.value = data.data.submissions
       submissionsTotal.value = data.data.total
     } else {
       throw new Error(data.message)
@@ -422,6 +410,13 @@ const tabs = [
   { key: 'problems', label: '已解决题目' },
   { key: 'contests', label: '比赛记录' },
 ]
+
+// 添加一个计算属性来处理分页
+const paginatedSubmissions = computed(() => {
+  const start = (submissionsPage.value - 1) * submissionsPageSize.value
+  const end = start + submissionsPageSize.value
+  return submissions.value.slice(start, end)
+})
 </script>
 
 <style scoped>
@@ -706,6 +701,11 @@ const tabs = [
   background: linear-gradient(135deg, #2c3e50, #3498db);
   box-shadow: 0 2px 8px rgba(44, 62, 80, 0.3);
   animation: pulse 2s infinite;
+}
+
+.status-badge.nonzero-exit-status {
+  background: linear-gradient(135deg, #cb356b, #bd3f32);
+  box-shadow: 0 2px 8px rgba(203, 53, 107, 0.3);
 }
 
 /* 语言徽章样式 */

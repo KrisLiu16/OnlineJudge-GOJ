@@ -11,7 +11,7 @@ interface UserState {
 
 interface UserStoreActions {
   setUserState(userData: LoginResponse): void
-  login(email: string, password: string): Promise<LoginResponse | undefined>
+  login(account: string, password: string): Promise<LoginResponse | undefined>
   register(username: string, email: string, password: string): Promise<LoginResponse | undefined>
   clearUserState(): void
   logout(): void
@@ -57,9 +57,9 @@ export const useUserStore = defineStore<
       this.userAvatar = userData.user.avatar || '/images/avatars/default-avatar.png'
     },
 
-    async login(email: string, password: string) {
+    async login(account: string, password: string) {
       try {
-        const res = await userApi.login({ email, password })
+        const res = await userApi.login({ account, password })
         if (res.data) {
           this.setUserState(res.data)
           return res.data
