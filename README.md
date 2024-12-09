@@ -4,7 +4,7 @@
 [![Go](https://img.shields.io/badge/go-1.22-blue.svg?style=flat-square)](https://golang.org/)
 [![Gin](https://img.shields.io/badge/gin-1.9.1-blue.svg?style=flat-square)](https://gin-gonic.com/)
 
-> #### 基于 Go 和 Vue3 的现代在线评测系统
+> #### 基于 Go 和 Vue3 的计算机程序程序在线评测系统
 
 [English Document](README-EN.md)
 
@@ -14,10 +14,24 @@
 - 前后端分离，微服务架构
 - 支持多种编程语言
 - 实时评测，快速反馈
-- 丰富的数据可视化
+- 渐进式并且统一的UI风格
 - 完善的权限管理系统
 - 支持 Markdown & LaTeX
-- 响应式设计，支持移动端
+
+![image](https://github.com/user-attachments/assets/91321577-8c96-4c9e-b496-231ede1ecf2f)
+
+![image](https://github.com/user-attachments/assets/5e30fd9e-196f-497e-b13c-42b9277774c3)
+
+![image](https://github.com/user-attachments/assets/0655efb1-b5c1-4d51-a18a-f98380ea0711)
+
+![image](https://github.com/user-attachments/assets/6582aa24-10f3-49dc-9b5c-df1be448ab09)
+
+![image](https://github.com/user-attachments/assets/42c2090e-fbd2-4b9b-9e4d-cb4752ed166d)
+
+![image](https://github.com/user-attachments/assets/3a2c8a48-ac77-4ea0-a19b-60bf5b6a2615)
+
+![image](https://github.com/user-attachments/assets/1fe70f65-e516-4437-b347-7776de206851)
+
 
 主要模块：
 
