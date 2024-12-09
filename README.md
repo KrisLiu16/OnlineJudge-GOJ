@@ -4,7 +4,7 @@
 [![Go](https://img.shields.io/badge/go-1.22-blue.svg?style=flat-square)](https://golang.org/)
 [![Gin](https://img.shields.io/badge/gin-1.9.1-blue.svg?style=flat-square)](https://gin-gonic.com/)
 
-> #### 基于 Go 和 Vue3 的计算机程序程序在线评测系统
+> #### 基于 Go 和 Vue3 的计算机程序在线评测系统
 
 [English Document](README-EN.md)
 
