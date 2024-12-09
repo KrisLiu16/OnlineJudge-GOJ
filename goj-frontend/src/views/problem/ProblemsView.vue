@@ -92,8 +92,8 @@
                 <td>{{ problem.submissionCount }}</td>
                 <td>
                   {{
-                    problem.source.length > 8
-                      ? problem.source.substring(0, 8) + '...'
+                    problem.source.length > 15
+                      ? problem.source.substring(0, 7) + '...' + problem.source.substring(problem.source.length - 10)
                       : problem.source
                   }}
                 </td>

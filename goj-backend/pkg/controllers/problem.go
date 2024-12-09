@@ -68,7 +68,50 @@ func GetProblems(c *gin.Context) {
 
 	// 搜索条件
 	if params.Search != "" {
-		query = query.Where("title LIKE ? OR id LIKE ?", "%"+params.Search+"%", "%"+params.Search+"%")
+		// 构建搜索条件
+		searchQuery := config.DB.Where("1 = 0") // 初始化一个永假条件
+
+		// 搜索 ID、标题、来源和标签
+		searchQuery = searchQuery.Or(
+			"id LIKE ? OR title LIKE ? OR source LIKE ? OR tag LIKE ?",
+			"%"+params.Search+"%",
+			"%"+params.Search+"%",
+			"%"+params.Search+"%",
+			"%"+params.Search+"%",
+		)
+
+		// 搜索题目内容(需要读取 problem.json 文件)
+		var problemIDs []string
+		err := config.DB.Model(&models.Problem{}).Select("id").Find(&problemIDs).Error
+		if err == nil {
+			for _, pid := range problemIDs {
+				// 读取题目内容文件
+				problemPath := filepath.Join("data", "problems", pid, "problem.json")
+				data, err := os.ReadFile(problemPath)
+				if err != nil {
+					continue
+				}
+
+				var fullProblem struct {
+					Content string `json:"content"`
+				}
+
+				if err := json.Unmarshal(data, &fullProblem); err != nil {
+					continue
+				}
+
+				// 如果内容包含搜索关键词,添加到结果中
+				if strings.Contains(
+					strings.ToLower(fullProblem.Content),
+					strings.ToLower(params.Search),
+				) {
+					searchQuery = searchQuery.Or("id = ?", pid)
+				}
+			}
+		}
+
+		// 应用搜索条件
+		query = query.Where(searchQuery)
 	}
 
 	// 难度筛选
@@ -931,7 +974,7 @@ func DownloadAllProblemData(c *gin.Context) {
 	// 关闭zip写入器
 	zipWriter.Close()
 
-	// 发送文件
+	// 发��文件
 	c.FileAttachment(tmpFile.Name(), fmt.Sprintf("problem_%s_data.zip", problemID))
 }
 
