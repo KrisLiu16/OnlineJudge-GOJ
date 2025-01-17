@@ -267,20 +267,30 @@ func GetSubmissionDetail(c *gin.Context) {
 		First(&submission).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"code":    404,
-			"message": "提交记录不存在,或无权限查看",
+			"message": "提交记录不存在",
+		})
+		return
+	}
+
+	// 查询题目信息以获取role
+	var problem models.Problem
+	if err := config.DB.First(&problem, "id = ?", submission.ProblemID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    404,
+			"message": "提交记录不存在",
 		})
 		return
 	}
 
 	// 权限检查：
 	// 1. 管理员可以看所有提交
-	// 2. 用户可以看自己的提交
-	// 3. 用户可以看非管理员题目的其他用户提交
+	// 2. 用户只能看自己的提交
+	// 3. 如果题目是管理员题目，非管理员用户只能看自己的提交
 	if role != "admin" {
-		if submission.Role == "admin" && submission.UserID != userID {
-			c.JSON(http.StatusForbidden, gin.H{
-				"code":    403,
-				"message": "无权限查看该提交",
+		if problem.Role == "admin" && submission.UserID != userID {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code":    404,
+				"message": "提交记录不存在",
 			})
 			return
 		}

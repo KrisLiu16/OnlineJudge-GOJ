@@ -514,11 +514,15 @@ func GetProblemDetail(c *gin.Context) {
 	problemID := c.Param("id")
 	log.Printf("Debug - Getting problem detail for problemID: %s", problemID)
 
-	// 获用户ID（如果已登录）
+	// 获取用户角色和ID（如果已登录）
 	var userID uint
+	var userRole string
 	if id, exists := c.Get("userID"); exists {
 		userID = id.(uint)
-		log.Printf("Debug - User is logged in with userID: %d", userID)
+		if role, exists := c.Get("role"); exists {
+			userRole = role.(string)
+		}
+		log.Printf("Debug - User is logged in with userID: %d, role: %s", userID, userRole)
 	} else {
 		log.Printf("Debug - No user logged in")
 	}
@@ -534,6 +538,17 @@ func GetProblemDetail(c *gin.Context) {
 		return
 	}
 	log.Printf("Debug - Found problem: %s", problem.Title)
+
+	// 检查权限
+	if problem.Role == "admin" && userRole != "admin" {
+		log.Printf("Debug - Access denied: problem requires admin role")
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    404,
+			"message": "题目不存在",
+			"data":    nil,
+		})
+		return
+	}
 
 	// 获取用户提交状态（仅对已登录用户）
 	var status string = "unattempted"
@@ -974,7 +989,7 @@ func DownloadAllProblemData(c *gin.Context) {
 	// 关闭zip写入器
 	zipWriter.Close()
 
-	// 发��文件
+	// 发送文件
 	c.FileAttachment(tmpFile.Name(), fmt.Sprintf("problem_%s_data.zip", problemID))
 }
 
