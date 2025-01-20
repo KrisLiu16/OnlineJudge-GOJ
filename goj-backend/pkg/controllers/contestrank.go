@@ -55,7 +55,7 @@ type ContestSubmission struct {
 	UserID          uint        `json:"userId"`
 	Username        string      `json:"username"`
 	Avatar          string      `json:"avatar"`
-	Bio             string      `json:"bio"`          // 添加 Bio 字段
+	Bio             string      `json:"bio"`
 	ProblemID       string      `json:"problemId"`
 	Status          string      `json:"status"`
 	SubmitTime      time.Time   `json:"submitTime"`
@@ -105,17 +105,9 @@ func GetContestRank(c *gin.Context) {
 
 	// 按顺序获取所有提交记录（包含测试点信息）
 	var submissions []ContestSubmission
-	if err := config.DB.Table("submissions").
+	if err := config.DB.Model(&models.Submission{}).
 		Select(`
-			submissions.id,
-			submissions.user_id,
-			submissions.problem_id,
-			submissions.status,
-			submissions.submit_time,
-			submissions.time_used,
-			submissions.memory_used,
-			submissions.testcases_status,
-			submissions.testcases_info,
+			submissions.*,
 			users.username,
 			users.avatar,
 			users.bio
@@ -126,6 +118,20 @@ func GetContestRank(c *gin.Context) {
 		Find(&submissions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "message": "获取提交详情失败"})
 		return
+	}
+
+	// 在获取提交记录后添加更详细的调试信息
+	for _, sub := range submissions {
+		fmt.Printf("\n=== Submission Details ===\n")
+		fmt.Printf("ID: %d\n", sub.ID)
+		fmt.Printf("UserID: %d\n", sub.UserID)
+		fmt.Printf("ProblemID: %s\n", sub.ProblemID)
+		fmt.Printf("Status: %s\n", sub.Status)
+		fmt.Printf("TestcasesStatus type: %T\n", sub.TestcasesStatus)
+		fmt.Printf("TestcasesStatus: %+v\n", sub.TestcasesStatus)
+		fmt.Printf("TestcasesInfo: %+v\n", sub.TestcasesInfo)
+		fmt.Printf("Raw TestcasesStatus length: %d\n", len(sub.TestcasesStatus))
+		fmt.Printf("========================\n")
 	}
 
 	// 计算排名
@@ -189,36 +195,72 @@ func handleACMSubmission(userData *ContestRankData, sub *ContestSubmission, pena
 	}
 }
 
-// 修改IOI提交处理函数，使用测试点信息计算分数
+// 修改IOI提交处理函数，直接查询数据库获取测试点信息
 func handleIOISubmission(userData *ContestRankData, sub *ContestSubmission) {
+	fmt.Printf("\n=== Processing IOI Submission ===\n")
+	fmt.Printf("Processing submission for user %s (ID: %d)\n", userData.Username, userData.UserID)
+	fmt.Printf("Problem ID: %s\n", sub.ProblemID)
+	
+	// 直接从数据库查询完整的提交信息
+	var submission models.Submission
+	if err := config.DB.First(&submission, sub.ID).Error; err != nil {
+		fmt.Printf("Error fetching submission details: %v\n", err)
+		return
+	}
+	
 	currentScore := 0
-	if sub.Status == "Accepted" {
-		currentScore = 100
-	} else if sub.Status == "Partially Accepted" && len(sub.TestcasesStatus) > 0 {
+	if len(submission.TestcasesStatus) > 0 {
+		fmt.Printf("TestcasesStatus found with length: %d\n", len(submission.TestcasesStatus))
+		fmt.Printf("TestcasesStatus content: %v\n", submission.TestcasesStatus)
+		
 		// 计算通过的测试点数量
 		passedCount := 0
-		for _, status := range sub.TestcasesStatus {
+		for i, status := range submission.TestcasesStatus {
+			fmt.Printf("Testcase %d status: %s\n", i+1, status)
 			if status == "Accepted" {
 				passedCount++
 			}
 		}
-		currentScore = (passedCount * 100) / len(sub.TestcasesStatus)
+		
+		// 按通过测试点数量比例计算分数
+		currentScore = (passedCount * 100) / len(submission.TestcasesStatus)
+		fmt.Printf("Passed testcases: %d/%d\n", passedCount, len(submission.TestcasesStatus))
+		fmt.Printf("Calculated score: %d\n", currentScore)
+	} else {
+		fmt.Printf("No testcases status found for this submission\n")
 	}
 
+	// 检查现有分数
+	fmt.Printf("Current score for problem %s: %d\n", sub.ProblemID, userData.Scores[sub.ProblemID])
+	
 	// 更新最高分
 	if currentScore > userData.Scores[sub.ProblemID] {
+		fmt.Printf("Updating score from %d to %d\n", userData.Scores[sub.ProblemID], currentScore)
 		userData.Scores[sub.ProblemID] = currentScore
 		userData.TotalScore = calculateTotalScore(userData.Scores)
+		fmt.Printf("New total score: %d\n", userData.TotalScore)
+	} else {
+		fmt.Printf("Score not updated (current: %d, new: %d)\n", userData.Scores[sub.ProblemID], currentScore)
 	}
+	
+	fmt.Printf("=== End Processing ===\n\n")
 }
 
 // 获取排序后的排名列表
 func getRankedList(rankMap map[uint]*ContestRankData, rankType string) []*ContestRankData {
+	fmt.Printf("\n=== Generating Rank List ===\n")
+	fmt.Printf("Total participants: %d\n", len(rankMap))
+	fmt.Printf("Rank type: %s\n", rankType)
+	
 	ranks := make([]*ContestRankData, 0, len(rankMap))
-	for _, rank := range rankMap {
+	for userID, rank := range rankMap {
+		fmt.Printf("\nUser %s (ID: %d):\n", rank.Username, userID)
+		fmt.Printf("Scores: %v\n", rank.Scores)
+		fmt.Printf("Total Score: %d\n", rank.TotalScore)
 		ranks = append(ranks, rank)
 	}
 
+	// 排序
 	sort.Slice(ranks, func(i, j int) bool {
 		if rankType == "acm" {
 			if ranks[i].Solved != ranks[j].Solved {
@@ -228,6 +270,12 @@ func getRankedList(rankMap map[uint]*ContestRankData, rankType string) []*Contes
 		}
 		return ranks[i].TotalScore > ranks[j].TotalScore
 	})
+
+	fmt.Printf("\nFinal Ranking:\n")
+	for i, rank := range ranks {
+		fmt.Printf("%d. %s - Score: %d\n", i+1, rank.Username, rank.TotalScore)
+	}
+	fmt.Printf("=== End Ranking ===\n\n")
 
 	return ranks
 }

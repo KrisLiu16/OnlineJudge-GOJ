@@ -29,7 +29,7 @@ func NewJudgeManager(judgeAddr string, concurrency int) *JudgeManager {
 		resultHandler: handler.NewResultHandler(ws, judgeAddr),
 		semaphore:     make(chan struct{}, concurrency),
 		timeout:       600 * time.Second,                                                    // 600秒
-		maxRetries:    3,                                                                    // 3次重试
+		maxRetries:    1,                                                                    // 3次重试
 		retryDelays:   []time.Duration{3 * time.Second, 10 * time.Second, 60 * time.Second}, // 重试间隔
 	}
 }

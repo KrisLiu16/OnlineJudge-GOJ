@@ -10,9 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"log"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -205,7 +203,7 @@ func GetSubmissions(c *gin.Context) {
 		query = query.Where("submissions.status = ?", status)
 	}
 
-	// 获取提交列表 - 限制最新500条记录
+	// 获取提交列表 - 限制最新5000条记录
 	var submissions []struct {
 		models.Submission
 		ProblemTitle string `json:"problemTitle"`
@@ -214,7 +212,7 @@ func GetSubmissions(c *gin.Context) {
 	}
 
 	if err := query.Order("submissions.created_at DESC").
-		Limit(500).
+		Limit(5000).
 		Find(&submissions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    500,

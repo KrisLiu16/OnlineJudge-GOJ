@@ -78,9 +78,9 @@
           </td>
         </tr>
 
-        <!-- 数据列表 -->
+        <!-- 数据列表：使用 paginatedSubmissions 替代 submissions -->
         <template v-else>
-          <tr v-for="submission in submissions" :key="submission.ID">
+          <tr v-for="submission in paginatedSubmissions" :key="submission.ID">
             <td>
               <span :class="['status-badge', getStatusClass(submission.Status)]">
                 {{ submission.Status }}
@@ -310,6 +310,12 @@ const fetchSubmissions = async () => {
       // 更新显示的数据和总数
       submissions.value = filteredData
       total.value = filteredData.length
+      
+      // 重置页码（如果当前页码超出范围）
+      const maxPage = Math.ceil(total.value / pageSize.value)
+      if (currentPage.value > maxPage) {
+        currentPage.value = 1
+      }
     } else {
       throw new Error(data.message)
     }
@@ -321,6 +327,25 @@ const fetchSubmissions = async () => {
   }
 }
 
+// 添加分页数据的计算属性
+const paginatedSubmissions = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return submissions.value.slice(start, end)
+})
+
+// 修改页码变化处理函数
+const goToPage = (page: number) => {
+  currentPage.value = page
+  // 不需要重新获取数据，因为是前端分页
+}
+
+// 修改每页显示数量的处理函数
+const handlePageSizeChange = () => {
+  currentPage.value = 1 // 重置到第一页
+  // 不需要重新获取数据，因为是前端分页
+}
+
 // 监听状态变化时重新筛选数据
 watch(status, () => {
   let filteredData = [...allSubmissions.value]
@@ -329,6 +354,7 @@ watch(status, () => {
   }
   submissions.value = filteredData
   total.value = filteredData.length
+  currentPage.value = 1 // 重置页码
 })
 
 // 从 URL 参数更新表单值
@@ -392,18 +418,6 @@ const handleSearch = () => {
   router.replace({ query })
 
   // 重置页码并获取数据
-  currentPage.value = 1
-  fetchSubmissions()
-}
-
-// 修改页码变化处理函数
-const goToPage = (page: number) => {
-  currentPage.value = page
-  fetchSubmissions()
-}
-
-// 修改每页显示数量
-const handlePageSizeChange = () => {
   currentPage.value = 1
   fetchSubmissions()
 }
