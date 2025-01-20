@@ -25,6 +25,7 @@ type ContestRankData struct {
 	UserID     uint              `json:"userId"`
 	Username   string            `json:"username"`
 	Avatar     string            `json:"avatar"`
+	Bio        string            `json:"bio"`      // 添加 Bio 字段
 	Problems   map[string]string `json:"problems"`   // 题目状态 map[problemId]status
 	Scores     map[string]int    `json:"scores"`     // IOI模式得分 map[problemId]score
 	Attempts   map[string]int    `json:"attempts"`   // 尝试次数 map[problemId]attempts
@@ -54,6 +55,7 @@ type ContestSubmission struct {
 	UserID          uint        `json:"userId"`
 	Username        string      `json:"username"`
 	Avatar          string      `json:"avatar"`
+	Bio             string      `json:"bio"`          // 添加 Bio 字段
 	ProblemID       string      `json:"problemId"`
 	Status          string      `json:"status"`
 	SubmitTime      time.Time   `json:"submitTime"`
@@ -115,7 +117,8 @@ func GetContestRank(c *gin.Context) {
 			submissions.testcases_status,
 			submissions.testcases_info,
 			users.username,
-			users.avatar
+			users.avatar,
+			users.bio
 		`).
 		Joins("LEFT JOIN users ON users.id = submissions.user_id").
 		Where("submissions.id IN ?", submissionIDs).
@@ -160,6 +163,7 @@ func initUserRankData(rankMap map[uint]*ContestRankData, sub *ContestSubmission)
 			UserID:     sub.UserID,
 			Username:   sub.Username,
 			Avatar:     sub.Avatar,
+			Bio:        sub.Bio,           // 添加 Bio 信息
 			Problems:   make(map[string]string),
 			Scores:     make(map[string]int),
 			Attempts:   make(map[string]int),
@@ -532,7 +536,8 @@ func ExportContestRank(c *gin.Context) {
 			submissions.testcases_status,
 			submissions.testcases_info,
 			users.username,
-			users.avatar
+			users.avatar,
+			users.bio
 		`).
 		Joins("LEFT JOIN users ON users.id = submissions.user_id").
 		Where("submissions.id IN ?", submissionIDs).
@@ -566,7 +571,7 @@ func ExportContestRank(c *gin.Context) {
 	f.SetActiveSheet(index)
 
 	// 设置表头
-	headers := []string{"排名", "用户名"}
+	headers := []string{"排名", "用户名", "个人简介"}  // 添加"个人简介"列
 	if rankType == "acm" {
 		headers = append(headers, "解题数", "罚时")
 	} else {
@@ -603,10 +608,12 @@ func ExportContestRank(c *gin.Context) {
 		// 写入基本信息
 		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), i+1)
 		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), rank.Username)
+		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), rank.Bio)  // 添加 Bio 信息
 
 		if rankType == "acm" {
-			f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), rank.Solved)
-			f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), fmt.Sprintf("%d:%02d", rank.Penalty/60, rank.Penalty%60))
+			// ACM模式下的列偏移量需要+1，因为多了bio列
+			f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), rank.Solved)
+			f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), fmt.Sprintf("%d:%02d", rank.Penalty/60, rank.Penalty%60))
 			// 写入每题状态
 			for j, problemId := range problems {
 				status := "-"
@@ -615,14 +622,15 @@ func ExportContestRank(c *gin.Context) {
 				} else if rank.Attempts[problemId] > 0 {
 					status = fmt.Sprintf("-%d", rank.Attempts[problemId])
 				}
-				f.SetCellValue(sheetName, fmt.Sprintf("%c%d", 'E'+j, row), status)
+				f.SetCellValue(sheetName, fmt.Sprintf("%c%d", 'F'+j, row), status)  // 列号从F开始
 			}
 		} else {
-			f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), rank.TotalScore)
+			// IOI模式下的列偏移量也需要+1
+			f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), rank.TotalScore)
 			// 写入每题分数
 			for j, problemId := range problems {
 				score := rank.Scores[problemId]
-				f.SetCellValue(sheetName, fmt.Sprintf("%c%d", 'D'+j, row), score)
+				f.SetCellValue(sheetName, fmt.Sprintf("%c%d", 'E'+j, row), score)  // 列号从E开始
 			}
 		}
 	}
@@ -632,6 +640,9 @@ func ExportContestRank(c *gin.Context) {
 		col := string(rune('A' + i))
 		f.SetColWidth(sheetName, col, col, 15)
 	}
+
+	// 调整bio列的宽度，因为可能内容较长
+	f.SetColWidth(sheetName, "C", "C", 30)  // 设置bio列宽度为30
 
 	// 生成文件名
 	timestamp := time.Now().Format("20060102150405")

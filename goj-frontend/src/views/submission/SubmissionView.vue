@@ -331,14 +331,52 @@ watch(status, () => {
   total.value = filteredData.length
 })
 
-// 修改搜索处理函数
+// 从 URL 参数更新表单值
+const updateFormFromQuery = () => {
+  const query = route.query
+  username.value = query.username?.toString() || ''
+  problemId.value = query.problemId?.toString() || ''
+  contestId.value = query.contestId?.toString() || ''
+  status.value = query.status?.toString() || ''
+  
+  // 如果有任何参数，则自动执行搜索
+  if (query.username || query.problemId || query.contestId || query.status) {
+    fetchSubmissions()
+  }
+}
+
+// 修改 onMounted
+onMounted(() => {
+  if (!userStore.isLoggedIn) {
+    router.push({
+      path: '/sign-in',
+      query: { redirect: route.fullPath },
+    })
+    return
+  }
+
+  // 从 URL 参数更新表单值
+  updateFormFromQuery()
+})
+
+// 监听路由变化
+watch(
+  () => route.query,
+  (newQuery) => {
+    // 只在查询参数变化时更新表单
+    updateFormFromQuery()
+  },
+  { immediate: true }
+)
+
+// 修改 handleSearch 函数
 const handleSearch = () => {
   // 构建查询参数
   const query: Record<string, string> = {}
 
-  // 添加所有筛选参数
-  if (status.value) {
-    query.status = status.value
+  // 只添加非空的参数
+  if (username.value) {
+    query.username = username.value
   }
   if (problemId.value) {
     query.problemId = problemId.value
@@ -346,11 +384,11 @@ const handleSearch = () => {
   if (contestId.value) {
     query.contestId = contestId.value
   }
-  if (username.value) {
-    query.username = username.value
+  if (status.value) {
+    query.status = status.value
   }
 
-  // 更新路由
+  // 更新路由（不刷新页面）
   router.replace({ query })
 
   // 重置页码并获取数据
@@ -394,39 +432,6 @@ const getLanguageDisplay = (lang: string) => {
   }
   return langMap[lang] || lang
 }
-
-
-
-// 修改 onMounted
-onMounted(() => {
-  if (!userStore.isLoggedIn) {
-    router.push({
-      path: '/sign-in',
-      query: { redirect: route.fullPath },
-    })
-    return
-  }
-
-  // 设置默认分页值
-  currentPage.value = 1
-  pageSize.value = 20
-
-  fetchSubmissions()
-})
-
-// 修改路由监听
-watch(
-  () => route.query,
-  (newQuery: Record<string, string>) => {
-    // 只在搜索参数变化时重新获取数据
-    if (newQuery.problemId !== route.query.problemId ||
-        newQuery.contestId !== route.query.contestId ||
-        newQuery.username !== route.query.username) {
-      currentPage.value = 1
-      fetchSubmissions()
-    }
-  }
-)
 
 // 监听用户信息变化
 watch(

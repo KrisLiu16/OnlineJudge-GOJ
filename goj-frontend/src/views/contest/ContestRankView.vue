@@ -64,14 +64,17 @@
         <tbody>
           <tr v-for="(rank, index) in currentPageData" :key="rank.userId">
             <td class="rank-col">
-              <span class="rank-badge" :class="getRankClass(index + 1)">
-                {{ index + 1 }}
+              <span class="rank-badge" :class="getRankClass(getRealRank(index))">
+                {{ getRealRank(index) }}
               </span>
             </td>
             <td class="user-col">
               <div class="user-info">
                 <img :src="rank.avatar" alt="avatar" class="avatar" />
-                <span class="username">{{ rank.username }}</span>
+                <div class="user-details">
+                  <span class="username">{{ rank.username }}</span>
+                  <span v-if="rank.bio" class="user-bio">{{ rank.bio }}</span>
+                </div>
               </div>
             </td>
             <template v-if="rankType === 'acm'">
@@ -176,6 +179,7 @@ interface RankData {
   userId: number
   username: string
   avatar: string
+  bio: string
   problems: Record<string, string>
   attempts: Record<string, number>
   solved: number
@@ -312,15 +316,15 @@ const getProblemLabel = (problemId: string) => {
   return String.fromCharCode(65 + index) // A, B, C, D...
 }
 
-// 添加排名样式函数
+// 修改排名样式函数
 const getRankClass = (rank: number) => {
   if (rank === 1) return 'rank-first'
   if (rank === 2) return 'rank-second'
   if (rank === 3) return 'rank-third'
-  return ''
+  return '' // 对于其他排名，返回空字符串，不添加任何特殊样式类
 }
 
-// 添加分页相关的响��式变量
+// 添加分页相关的响应式变量
 const currentPage = ref(1)
 const pageSize = ref(20)
 const total = computed(() => filteredRankings.value.length)
@@ -431,6 +435,11 @@ const exportRank = async () => {
   } finally {
     exporting.value = false
   }
+}
+
+// 添加计算真实排名的函数
+const getRealRank = (index: number) => {
+  return (currentPage.value - 1) * pageSize.value + index + 1
 }
 
 onMounted(() => {
@@ -574,7 +583,7 @@ td {
 }
 
 .user-col {
-  width: 200px;
+  width: 250px;
   text-align: left;
 }
 
@@ -640,9 +649,25 @@ tr:hover .avatar {
   transform: scale(1.1);
 }
 
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
 .username {
   font-weight: 500;
   color: var(--primary-color);
+}
+
+.user-bio {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  opacity: 0.8;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pagination {
@@ -808,7 +833,8 @@ tr:hover .avatar {
 }
 
 .penalty-col {
-  width: 100px;
+  width: 120px;
+  text-align: center;
 }
 
 .penalty-badge {
@@ -821,6 +847,7 @@ tr:hover .avatar {
   font-family: 'Fira Code', monospace;
   box-shadow: 0 2px 8px rgba(131, 77, 155, 0.3);
   transition: all 0.3s ease;
+  min-width: 80px;
 }
 
 .penalty-badge:hover {
@@ -830,10 +857,11 @@ tr:hover .avatar {
 
 th.penalty-col,
 td.penalty-col {
-  position: sticky;
-  left: 380px;
-  background: inherit;
-  z-index: 1;
+  /* 删除以下属性 */
+  /* position: sticky; */
+  /* left: 380px; */
+  /* background: inherit; */
+  /* z-index: 1; */
 }
 
 tr:hover .penalty-badge {
