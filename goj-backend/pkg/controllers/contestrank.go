@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"goj/pkg/config"
@@ -43,10 +44,10 @@ func calculateTotalScore(scores map[string]int) int {
 	return total
 }
 
+// 修改缓存时间为1分钟
 const (
-	// Redis 缓存相关常量
 	ContestRankCacheKey    = "contest_rank:%s:%s" // 格式: contest_rank:contestId:rankType
-	ContestRankCachePeriod = 15 * time.Second     // 增加到60秒，减少服务器压力
+	ContestRankCachePeriod = 60 * time.Second     // 缓存时间改为1分钟
 )
 
 // 修改提交记录查询结构体
@@ -70,7 +71,19 @@ func GetContestRank(c *gin.Context) {
 	contestID := c.Param("id")
 	rankType := c.DefaultQuery("type", "acm")
 
-	// 获取比赛信息（包含开始时间和罚时）
+	// 构造缓存键
+	cacheKey := fmt.Sprintf(ContestRankCacheKey, contestID, rankType)
+
+	// 尝试从缓存获取数据
+	if cachedData, err := config.RDB.Get(c, cacheKey).Result(); err == nil {
+		var rankData gin.H
+		if err := json.Unmarshal([]byte(cachedData), &rankData); err == nil {
+			c.JSON(http.StatusOK, gin.H{"code": 200, "data": rankData})
+			return
+		}
+	}
+
+	// 如果缓存不存在或已过期，则重新计算排名
 	var contest models.Contest
 	if err := config.DB.First(&contest, contestID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"code": 404, "message": "比赛不存在"})
@@ -84,7 +97,7 @@ func GetContestRank(c *gin.Context) {
 	if err := config.DB.Table("contest_submission_status").
 		Where("contest_id = ?", contestID).
 		First(&contestStatus).Error; err != nil {
-		// 如果没有提交记录，返回空的排名数据
+		// 如果没有提交记录，返回空的排名数据并缓存
 		rankData := gin.H{
 			"problems":  strings.Split(contest.Problems, ","),
 			"ranks":     []*ContestRankData{},
@@ -92,6 +105,12 @@ func GetContestRank(c *gin.Context) {
 			"type":      rankType,
 			"startTime": contest.StartTime,
 		}
+		
+		// 缓存空数据
+		if jsonData, err := json.Marshal(rankData); err == nil {
+			config.RDB.Set(c, cacheKey, jsonData, ContestRankCachePeriod)
+		}
+		
 		c.JSON(http.StatusOK, gin.H{"code": 200, "data": rankData})
 		return
 	}
@@ -157,6 +176,11 @@ func GetContestRank(c *gin.Context) {
 		"penalty":   contest.PenaltyTime,
 		"type":      rankType,
 		"startTime": contest.StartTime,
+	}
+
+	// 将计算结果存入缓存
+	if jsonData, err := json.Marshal(rankData); err == nil {
+		config.RDB.Set(c, cacheKey, jsonData, ContestRankCachePeriod)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"code": 200, "data": rankData})
@@ -729,4 +753,14 @@ func ExportContestRank(c *gin.Context) {
 		time.Sleep(time.Second * 5) // 等待5秒确保文件传输完成
 		os.Remove(filepath)
 	}()
+}
+
+// 修改清除缓存的函数
+func ClearContestRankCache(contestID string) {
+	// 同时清除 ACM 和 IOI 模式的缓存
+	cacheKeyACM := fmt.Sprintf(ContestRankCacheKey, contestID, "acm")
+	cacheKeyIOI := fmt.Sprintf(ContestRankCacheKey, contestID, "ioi")
+	
+	config.RDB.Del(context.Background(), cacheKeyACM)
+	config.RDB.Del(context.Background(), cacheKeyIOI)
 }
