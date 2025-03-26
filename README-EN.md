@@ -77,7 +77,7 @@ This method is suitable for those who prefer a quick setup or are not familiar w
 2. In the project root directory, use the `docker-compose.yml` file to build the frontend and backend:
 
    ```bash
-   docker-compose up -d --build
+   docker compose up -d --build
    ```
 
 3. If you need to modify the source code, you can edit it locally and then rebuild.

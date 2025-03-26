@@ -91,7 +91,7 @@
 2. 在项目根目录下，使用 `docker-compose.yml` 文件构建前后端：
 
    ```bash
-   docker-compose up -d --build
+   docker compose up -d --build
    ```
 
 3. 如果需要修改源代码，可以在本地编辑，然后重新构建。

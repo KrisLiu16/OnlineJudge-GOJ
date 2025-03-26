@@ -166,7 +166,6 @@ export default defineComponent({
       { path: '/contests', name: '比赛' },
       { path: '/submissions', name: '测评' },
       // { path: '/groups', name: '群组' },
-      { path: '/discuss', name: '讨论' },
       { path: '/rank', name: '排名' },
     ]
 

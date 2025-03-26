@@ -41,6 +41,17 @@
             </div>
           </div>
 
+          <div class="time-info glass-card">
+            <div class="time-item">
+              <span class="label">提交时间</span>
+              <span class="value">{{ formatTime(submission?.submitTime) }}</span>
+            </div>
+            <div class="time-item">
+              <span class="label">评测时间</span>
+              <span class="value">{{ formatTime(submission?.judgeTime) }}</span>
+            </div>
+          </div>
+
           <div class="stats-section">
             <div class="stats-grid">
               <div class="stat-item glass-card">
@@ -227,6 +238,32 @@
   align-items: center;
   padding: 1rem 1.5rem;
   margin-bottom: 1rem;
+}
+
+.time-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.time-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.time-item .label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.time-item .value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .user-info {
@@ -1199,6 +1236,11 @@ const copyCode = () => {
 }
 
 // 格式化时间
+const formatTime = (timestamp: string | undefined) => {
+  if (!timestamp) return '未知时间'
+  const date = new Date(timestamp)
+  return date.toLocaleString()
+}
 
 onMounted(() => {
   fetchSubmissionDetail()
