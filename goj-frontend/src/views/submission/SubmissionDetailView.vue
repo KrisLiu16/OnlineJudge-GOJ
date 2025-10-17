@@ -43,16 +43,26 @@
 
           <div class="stats-section">
             <div class="stats-grid">
+              <!-- 提交时间框 (新增) -->
+              <div class="stat-item glass-card submit-time-stat">
+                <span class="label">提交时间</span>
+                <span class="value submit-time-value">
+                  {{ formatTime(submission?.submitTime) }}
+                </span>
+              </div>
+              <!-- 语言 -->
               <div class="stat-item glass-card">
                 <span class="label">语言</span>
                 <span class="value language-badge" :class="submission?.language.toLowerCase()">
                   {{ getLanguageDisplay(submission?.language || '') }}
                 </span>
               </div>
+              <!-- 耗时 -->
               <div class="stat-item glass-card">
                 <span class="label">耗时</span>
                 <span class="value time-badge"> {{ submission?.timeUsed }}ms </span>
               </div>
+              <!-- 内存 -->
               <div class="stat-item glass-card">
                 <span class="label">内存</span>
                 <span class="value memory-badge"> {{ submission?.memoryUsed }}KB </span>
@@ -239,6 +249,7 @@
   width: 100%;
 }
 
+/* 调整 stats-grid 以适应四个项目 */
 .stats-grid {
   display: flex;
   gap: 1rem;
@@ -690,12 +701,20 @@
 /* 通用徽章样式 */
 .value.language-badge,
 .value.time-badge,
-.value.memory-badge {
+.value.memory-badge,
+.value.submit-time-value /* 新增 */ {
   padding: 0.3rem 0.8rem;
   border-radius: 12px;
   color: white;
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 提交时间徽章样式 (新增) */
+.value.submit-time-value {
+  background: linear-gradient(135deg, #74ebd5, #9face6); /* 浅蓝色调渐变 */
+  color: #333; /* 浅色背景配深色文字 */
+  box-shadow: 0 2px 8px rgba(116, 235, 213, 0.3);
 }
 
 /* 语言徽章样式 */
@@ -750,13 +769,15 @@
 /* 添加悬停效果 */
 .value.language-badge,
 .value.time-badge,
-.value.memory-badge {
+.value.memory-badge,
+.value.submit-time-value /* 新增 */ {
   transition: all 0.3s ease;
 }
 
 .value.language-badge:hover,
 .value.time-badge:hover,
-.value.memory-badge:hover {
+.value.memory-badge:hover,
+.value.submit-time-value:hover /* 新增 */ {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -1077,6 +1098,28 @@ const submission = ref<Submission | null>(null)
 const isCopied = ref(false)
 const expandedTests = ref<boolean[]>([])
 
+// 格式化时间函数 (新增)
+const formatTime = (timeString: string | undefined): string => {
+  if (!timeString) return 'N/A'
+  try {
+    const date = new Date(timeString)
+    // 格式化为：YYYY-MM-DD HH:mm:ss
+    const year = date.getFullYear()
+    // getMonth() 返回 0-11，所以需要 +1
+    const month = String(date.getMonth() + 1).padStart(2, '0') 
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  } catch (e) {
+    console.error('时间格式化错误:', e)
+    return timeString.substring(0, 19) // 尝试返回 ISO 格式的简化版本
+  }
+}
+
+
 // 修改计算属性，添加空值检查
 const highlightedCode = computed(() => {
   if (!submission.value?.code || !submission.value?.language) return ''
@@ -1136,7 +1179,7 @@ const fetchSubmissionDetail = async () => {
         problemId: data.data.problemId,
         testcasesStatus: data.data.testcasesStatus || [],
         testcasesInfo: data.data.testcasesInfo || [],
-        submitTime: data.data.submitTime,
+        submitTime: data.data.submitTime, // 确保这个字段从 API 响应中获取
         judgeTime: data.data.judgeTime,
         testCaseResults: data.data.testCaseResults || [],
       }
