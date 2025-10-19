@@ -8,17 +8,6 @@
 
 [中文文档](README.md)
 
-## Overview
-
-- One-click deployment based on Docker
-- Frontend and backend separation, microservices architecture
-- Supports multiple programming languages
-- Real-time evaluation with quick feedback
-- Rich data visualization
-- Comprehensive permission management system
-- Supports Markdown & LaTeX
-- Responsive design, mobile-friendly
-
 Main modules:
 
 - Frontend (Vue3): [goj-frontend](https://github.com/KrisLiu16/OnlineJudge-GOJ/tree/main/goj-frontend)
