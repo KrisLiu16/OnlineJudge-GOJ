@@ -14,15 +14,6 @@
 - 后端 (Golang): [goj-backend](https://github.com/KrisLiu16/OnlineJudge-GOJ/tree/main/goj-backend)
 - 判题服务 (go-judge): [go-judge](https://github.com/criyle/go-judge)
 
-## 概览
-
-- 基于 Docker，一键部署
-- 分布式架构，支持评测机集群部署
-- 渐进式并且统一的UI风格
-- 完善的权限管理系统
-- 支持 Markdown & LaTeX
-
-
 ## 安装
 
 ### 提示：如果不会使用 Docker
