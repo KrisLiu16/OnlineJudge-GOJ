@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"goj/pkg/config"
-	"goj/pkg/judge/types"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/types"
 	"log"
 )
 
