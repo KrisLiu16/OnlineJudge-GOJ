@@ -1,4 +1,4 @@
-module goj
+module github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend
 
 go 1.22
 
