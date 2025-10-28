@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
-	"goj/pkg/config"
-	"goj/pkg/models"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/models"
 	"net/http"
 	"time"
 
