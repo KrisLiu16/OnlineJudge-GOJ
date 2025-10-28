@@ -2,9 +2,9 @@ package manager
 
 import (
 	"fmt"
-	"goj/pkg/config"
-	"goj/pkg/judge/handler"
-	"goj/pkg/judge/types"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/handler"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/types"
 	"log"
 	"time"
 )
