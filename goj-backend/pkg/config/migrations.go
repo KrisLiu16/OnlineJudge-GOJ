@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"goj/pkg/models"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/models"
 	"log"
 )
 
