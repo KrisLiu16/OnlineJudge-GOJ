@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"goj/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
 	"log"
 	"net/http"
 
