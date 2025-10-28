@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"goj/pkg/auth"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/auth"
 
 	"github.com/gin-gonic/gin"
 )
