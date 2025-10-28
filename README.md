@@ -1,4 +1,6 @@
 # GO! Judge
+[![Go Reference](https://pkg.go.dev/badge/github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend.svg)](https://pkg.go.dev/github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend) [![Go Report Card](https://goreportcard.com/badge/github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend)](https://goreportcard.com/report/github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend) [![Release](https://img.shields.io/github/v/tag/KrisLiu16/OnlineJudge-GOJ/goj-backend)](https://github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/releases/latest) ![Build](https://github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/workflows/Build/badge.svg)
+
 
 [![Vue](https://img.shields.io/badge/vue-3.3.4-brightgreen.svg?style=flat-square)](https://vuejs.org/)
 [![Go](https://img.shields.io/badge/go-1.22-blue.svg?style=flat-square)](https://golang.org/)
