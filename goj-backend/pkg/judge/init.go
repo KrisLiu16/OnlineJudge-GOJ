@@ -1,8 +1,8 @@
 package judge
 
 import (
-	"goj/pkg/config"
-	"goj/pkg/judge/manager"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/manager"
 )
 
 // Init 初始化评测系统
