@@ -1,7 +1,7 @@
 package models
 
 import (
-	"goj/pkg/types"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/types"
 	"time"
 
 	"gorm.io/gorm"
