@@ -1,11 +1,11 @@
 package main
 
 import (
-	"goj/pkg/config"
-	"goj/pkg/judge"
-	"goj/pkg/judge/handler"
-	"goj/pkg/rank"
-	"goj/pkg/routes"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/handler"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/rank"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/routes"
 	"io"
 	"log"
 	"os"
