@@ -1,11 +1,11 @@
 package routes
 
 import (
-	"goj/pkg/auth"
-	"goj/pkg/controllers"
-	"goj/pkg/judge/handler"
-	"goj/pkg/middleware"
-	"goj/pkg/rank"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/auth"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/controllers"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/handler"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/middleware"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/rank"
 	"io"
 	"log"
 	"net/http"
