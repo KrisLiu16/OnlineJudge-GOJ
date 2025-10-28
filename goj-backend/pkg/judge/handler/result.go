@@ -3,9 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"goj/pkg/config"
-	"goj/pkg/judge/types"
-	"goj/pkg/models"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/types"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/models"
 	"log"
 	"net/http"
 	"strings"
