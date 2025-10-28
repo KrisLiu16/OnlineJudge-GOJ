@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"goj/pkg/config"
-	"goj/pkg/judge/manager"
-	"goj/pkg/judge/types"
-	"goj/pkg/models"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/manager"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/judge/types"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/models"
 	"net/http"
 	"strconv"
 	"strings"
