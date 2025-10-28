@@ -1,0 +1,36 @@
+name: Go CI Build and Test
+
+# 触发工作流的事件
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        # 确保 Go 版本与您的 go.mod 兼容
+        go-version: '1.22' 
+
+    - name: Build and Test goj-backend module
+      # Go CI 脚本的关键，进入子目录操作
+      run: |
+        # 导航到 goj-backend 目录
+        cd goj-backend/
+        
+        # 下载所有依赖项
+        go mod tidy 
+        
+        # 运行所有测试（如果存在测试文件）
+        go test -v ./...
+        
+        # 尝试编译整个模块，确保没有编译错误
+        go build -v ./...
