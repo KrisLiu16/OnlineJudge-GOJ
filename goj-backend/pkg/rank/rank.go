@@ -3,7 +3,7 @@ package rank
 import (
 	"context"
 	"encoding/json"
-	"goj/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
 	"log"
 	"net/http"
 	"sort"
