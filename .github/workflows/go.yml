@@ -1,4 +1,4 @@
-name: Go CI Build and Test
+name: Build
 
 # 触发工作流的事件
 on:
