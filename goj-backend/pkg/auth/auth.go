@@ -2,9 +2,9 @@ package auth
 
 import (
 	"fmt"
-	"goj/pkg/config"
-	"goj/pkg/models"
-	"goj/pkg/types"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/config"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/models"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/types"
 	"io"
 	"log"
 	"net/http"
