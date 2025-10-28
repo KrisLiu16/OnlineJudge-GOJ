@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"goj/pkg/controllers"
-	"goj/pkg/middleware"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/controllers"
+	"github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 )
