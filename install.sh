@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 检查 Docker 是否已安装
+# 检查 Docker 是否已安装 注意安装时候sudo
 if command -v docker &> /dev/null
 then
     echo "Docker 已安装，跳过安装步骤。"
