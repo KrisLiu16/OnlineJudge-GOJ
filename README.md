@@ -1,10 +1,10 @@
 # GO! Judge
 [![Go Reference](https://pkg.go.dev/badge/github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend.svg)](https://pkg.go.dev/github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend) [![Go Report Card](https://goreportcard.com/badge/github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend)](https://goreportcard.com/report/github.com/KrisLiu16/OnlineJudge-GOJ/goj-backend) [![Release](https://img.shields.io/github/v/tag/KrisLiu16/OnlineJudge-GOJ)](https://github.com/KrisLiu16/OnlineJudge-GOJ/releases/latest) ![Go CI Status](https://github.com/KrisLiu16/OnlineJudge-GOJ/actions/workflows/go.yml/badge.svg)
 
-
 [![Vue](https://img.shields.io/badge/vue-3.3.4-brightgreen.svg?style=flat-square)](https://vuejs.org/)
 [![Go](https://img.shields.io/badge/go-1.22-blue.svg?style=flat-square)](https://golang.org/)
 [![Gin](https://img.shields.io/badge/gin-1.9.1-blue.svg?style=flat-square)](https://gin-gonic.com/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)]([https://deepwiki.com/yjl9903/AnimeGarden](https://deepwiki.com/krisliu16/onlinejudge-goj))
 
 > #### 基于 Go 和 Vue3 的计算机程序在线评测系统
 
