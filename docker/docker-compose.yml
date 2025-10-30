@@ -1,77 +1,119 @@
+# 定义日志配置的锚点（Anchor），方便在多个服务中引用
 x-logging: &default-logging
+  # 使用 json-file 日志驱动，这是 Docker 的默认驱动
   driver: json-file
   options:
+    # 设置单个日志文件的最大大小为 10M
     max-size: "10m"
+    # 设置最大日志文件数量为 5 个，达到上限后会进行轮转（删除最旧的）
     max-file: "5"
 
 services:
+  # MySQL 数据库服务
   goj-mysql:
+    # 使用官方 MySQL 8.0 镜像
     image: mysql:8.0
+    # 容器名称
     container_name: goj-mysql
+    # 重启策略：容器无论退出状态如何都会自动重启 (默认是 'no')
     restart: always
     security_opt:
+      # 禁用 seccomp 安全限制，有时能解决 MySQL 在容器内的一些权限问题 (可选, 默认不禁用)
       - seccomp:unconfined
+    # 容器启动时执行的命令，用于配置 MySQL 参数
     command:
+      # 设置默认认证插件为 mysql_native_password，兼容性更好
       - --default-authentication-plugin=mysql_native_password
+      # 设置最大连接数
       - --max_connections=1024
+      # 设置线程缓存大小，提高连接效率
       - --thread_cache_size=256
+      # 设置服务器字符集为 utf8mb4，支持更多字符（如表情符号）
       - --character-set-server=utf8mb4
+      # 设置服务器排序规则
       - --collation-server=utf8mb4_general_ci
+      # 启用对 TIMESTAMP 类型的严格控制
       - --explicit_defaults_for_timestamp=true
+      # 允许在存储过程和函数中使用不安全的 SQL（如修改数据的函数）
       - --log_bin_trust_function_creators=1
+    # 环境变量，用于配置 MySQL
     environment:
       - MYSQL_DATABASE=goj
       - MYSQL_USER=goj
       - MYSQL_PASSWORD=goj123456
       - MYSQL_ROOT_PASSWORD=root123456
     volumes:
+      # 数据卷挂载：将宿主机上的具名卷 mysql_data 挂载到容器内的 MySQL 数据目录，实现数据持久化
       - mysql_data:/var/lib/mysql
     ports:
+      # 端口映射：将宿主机的 3306 端口映射到容器的 3306 端口
       - "3306:3306"
     networks:
+      # 加入 goj-network 网络，使其能与其它服务通信
       - goj-network
+    # 应用前面定义的日志配置
     logging: *default-logging
 
+  # Redis 缓存服务
   goj-redis:
+    # 使用基于 Alpine Linux 的轻量级 Redis 镜像
     image: redis:alpine
     container_name: goj-redis
     restart: always
+    # 启动命令：开启 AOF（Append Only File）持久化，保证数据安全
     command: redis-server --appendonly yes
     volumes:
+      # 数据卷挂载：将宿主机上的具名卷 redis_data 挂载到容器内的 /data 目录，实现数据持久化
       - redis_data:/data
     ports:
+      # 端口映射：将宿主机的 6379 端口映射到容器的 6379 端口
       - "6379:6379"
     networks:
       - goj-network
     logging: *default-logging
 
+  # 判题服务 (Judge)
   goj-judge:
+    # 使用自定义的 goj-judge 镜像
     image: krisliu16/goj-judge:latest
     container_name: goj-judge
     restart: always
+    # 赋予容器几乎所有权限，通常用于需要进行低级别系统操作或沙箱隔离的判题环境
     privileged: true
+    # 设置共享内存大小为 512m (默认是 64m)，判题过程可能需要更大的共享内存 (可选，但推荐保留)
     shm_size: 512m
     ports:
+      # 端口映射
       - "5050:5050"
     networks:
       - goj-network
     logging: *default-logging
 
+  # 后端 API 服务
   goj-backend:
+    # 使用自定义的 goj-backend 镜像
     image: krisliu16/goj-backend:latest
     container_name: goj-backend
     restart: always
+    # 环境变量：配置后端服务连接数据库、Redis 和判题服务的地址
     environment:
+      # 数据库主机名为 goj-mysql（因为在同一个网络中，使用服务名即可）
       - DB_HOST=goj-mysql
       - DB_USER=goj
       - DB_PASSWORD=goj123456
       - DB_NAME=goj
+      # Redis 地址
       - REDIS_ADDR=goj-redis:6379
+      # 判题服务地址
       - JUDGE_ADDR=http://goj-judge:5050
     ports:
+      # 端口映射
       - "3000:3000"
     volumes:
+      # 挂载自定义数据卷（可能用于存储配置文件、上传文件等）
+      # 注意：这里使用了相对路径 ../goj-backend/data，要求宿主机上存在此路径
       - ../goj-backend/data:/app/data
+    # 依赖服务：确保 goj-mysql 和 goj-redis 启动后，再启动 goj-backend
     depends_on:
       - goj-mysql
       - goj-redis
@@ -79,12 +121,16 @@ services:
       - goj-network
     logging: *default-logging
 
+  # 前端 Web 服务
   goj-frontend:
+    # 使用自定义的 goj-frontend 镜像
     image: krisliu16/goj-frontend:latest
     container_name: goj-frontend
     restart: always
     ports:
+      # 端口映射：将宿主机的 80 端口（标准的 HTTP 端口）映射到容器的 80 端口
       - "80:80"
+    # 依赖服务：确保 goj-backend 启动后，再启动 goj-frontend
     depends_on:
       - goj-backend
     networks:
@@ -92,10 +138,13 @@ services:
     logging: *default-logging
 
 networks:
+  # 自定义网络 goj-network
   goj-network:
+    # 网络驱动：使用 bridge 驱动，这是默认的驱动类型，服务间可通过服务名相互访问 (driver: bridge 可省略)
     driver: bridge
 
 volumes:
-  mysql_data:
-  redis_data:
-  problem_data:
+  # 具名卷（Named Volume）定义
+  mysql_data: # 用于 goj-mysql 容器的数据持久化
+  redis_data: # 用于 goj-redis 容器的数据持久化
+  problem_data: # 定义了一个未在 services 中使用的卷，可能是预留或用于其他场景
